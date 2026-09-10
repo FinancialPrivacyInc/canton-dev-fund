@@ -6,8 +6,12 @@ CANTON DEVELOPMENT FUND · PROPOSAL
 | :---- | :---- |
 | STATUS | Draft |
 | CREATED | 2026-08-04 |
+| PROPOSAL TYPE | RFP-aligned |
+| RFP / ROADMAP AREA | RFP 23: Validator and Shared Infrastructure Security and Resilience (Security, Assurance & Incident Readiness). Secondary: RFP 26: Key Management and Signing Controls |
 | LABEL | node-deployment-operations |
 | CHAMPION | Shaul Kfir (Digital Asset) |
+| TOTAL FUNDING REQUEST | 3,630,000 CC |
+| PROJECT DURATION | About four months (16 weeks), plus twelve months of maintenance and support |
 
 **Abstract**
 
@@ -17,11 +21,11 @@ We propose an open-source (Apache-2.0) co-validator that closes both gaps: a Can
 
 ```mermaid
 flowchart TD
-    P["<b>PARTY P</b><br/>hosted on {N1, N2, N3} · confirmation threshold: 2 of 3"]
-    N1["<b>N1 · participant</b><br/>operator A<br/>can read P's data"]
-    N2["<b>N2 · participant</b><br/>operator B<br/>can read P's data"]
-    N3["<b>N3 · TEE co-validator</b><br/>operator C<br/><b>sees ciphertext only</b>"]
-    M["mediator: ≥ 2 confirmations → commit<br/><i>any single compromised node can neither forge nor block a commit</i>"]
+    P["PARTY P<br/>hosted on {N1, N2, N3} · confirmation threshold: 2 of 3"]
+    N1["N1 · participant<br/>operator A<br/>can read P's data"]
+    N2["N2 · participant<br/>operator B<br/>can read P's data"]
+    N3["N3 · TEE co-validator<br/>operator C<br/>sees ciphertext only"]
+    M["mediator: ≥ 2 confirmations → commit<br/>any single compromised node can neither forge nor block a commit"]
     P --- N1
     P --- N2
     P --- N3
@@ -64,19 +68,19 @@ flowchart LR
         subgraph ENC["NITRO ENCLAVE"]
             direction TB
             NOTE["no disk · no NIC · vsock only · RAM-resident"]
-            SP["<b>Splice participant</b><br/>validates · confirms"]
-            PG["<b>PostgreSQL</b><br/>in RAM"]
-            IK["<b>CANTON IDENTITY KEY</b><br/>signs confirmations · never leaves the enclave"]
-            PK["<b>SEALED PERSISTENCE KEY</b><br/>released only to a build with matching PCRs"]
-            AK["<b>AUDIT KEY (OPTIONAL)</b><br/>operator-configured public key"]
+            SP["Splice participant<br/>validates · confirms"]
+            PG["PostgreSQL<br/>in RAM"]
+            IK["CANTON IDENTITY KEY<br/>signs confirmations · never leaves the enclave"]
+            PK["SEALED PERSISTENCE KEY<br/>released only to a build with matching PCRs"]
+            AK["AUDIT KEY (OPTIONAL)<br/>operator-configured public key"]
             NOTE ~~~ SP
             SP ~~~ IK
             PG ~~~ PK
         end
     end
-    NET["<b>CANTON NETWORK</b><br/>counts the confirmations"]
-    ST["<b>EXTERNAL STORAGE</b><br/>ciphertext only<br/>snapshots · exports"]
-    AH["<b>SK_audit HOLDER</b><br/>self-custody (default) · HSM · service provider"]
+    NET["CANTON NETWORK<br/>counts the confirmations"]
+    ST["EXTERNAL STORAGE<br/>ciphertext only<br/>snapshots · exports"]
+    AH["SK_audit HOLDER<br/>self-custody (default) · HSM · service provider"]
     IK -- confirmations --> NET
     PK -- snapshots --> ST
     ST -. restore on restart .-> PG
@@ -103,11 +107,11 @@ flowchart LR
     subgraph OP["INFRASTRUCTURE OPERATOR"]
         direction TB
         SPC["hosts · relays · reads nothing"]
-        FE["<b>FRESH ENCLAVE</b><br/>1 · boots the published image<br/>2 · generates keypair (pk, sk)<br/><b>sk never leaves the enclave</b><br/>5 · receives keys, decrypts inside, begins co-validating"]
+        FE["FRESH ENCLAVE<br/>1 · boots the published image<br/>2 · generates keypair (pk, sk)<br/>sk never leaves the enclave<br/>5 · receives keys, decrypts inside, begins co-validating"]
         SPC ~~~ FE
     end
-    IS["<b>ISSUER — key provisioner</b><br/>4 · verifies the attestation against the published PCRs,<br/>then injects the identity and persistence keys · Enc(pk)"]
-    PB["<b>PUBLISHED BUILD</b><br/>source + PCR values"]
+    IS["ISSUER — key provisioner<br/>4 · verifies the attestation against the published PCRs,<br/>then injects the identity and persistence keys · Enc(pk)"]
+    PB["PUBLISHED BUILD<br/>source + PCR values"]
     FE -- "3 · attestation { PCRs, pk }" --> IS
     IS -. compare .- PB
     IS == "keys · Enc(pk)" ==> FE
@@ -129,7 +133,23 @@ flowchart LR
 
 **3\. Architectural Alignment**
 
-Functionally, a TEE co-validator behaves exactly like any confirming participant in the existing co-validation model. It hosts parties, validates its view, and counts toward confirmation thresholds. Protocol, standards, and topologies are unchanged. The difference is the trust boundary: the node's operator sits outside it, so co-validation no longer requires showing another organization the party's transactions. Canton gains cooperative validation that preserves financial privacy. The work fits the fund's stated scope under CIP-0082 (security, reference implementations, critical infrastructure) and operates within CIP-0100 governance.
+Functionally, a TEE co-validator behaves exactly like any confirming participant in the existing co-validation model. It hosts parties, validates its view, and counts toward confirmation thresholds. Protocol, standards, and topologies are unchanged. The difference is the trust boundary: the node's operator sits outside it, so co-validation no longer requires showing another organization the party's transactions. Canton gains cooperative validation that preserves financial privacy.
+
+**RFP alignment.** This proposal responds to **RFP 23, Validator and Shared Infrastructure Security and Resilience,** in the [2026–2028 Strategic Roadmap](https://github.com/canton-foundation/canton-dev-fund/blob/main/2026-2028-strategic-roadmap.md), which seeks "reusable tools, controls, and standards that improve the security, reliability, availability, and recoverability of Validator infrastructure," including "hardened configurations, … backup and recovery, … supply-chain security, or security controls for hosted Validator services." Against each of the RFP's terms:
+
+* *Hardened configuration and security controls for hosted Validators.* The participant runs inside a TEE; the hosting operator cannot read its state, alter it, or sign in its name, and has neither direct full access to the Ledger API nor unrestricted access to debug logs (§6).
+
+* *Backup and recovery.* State persists outside the enclave as encrypted snapshots under a sealed persistence key that only an attested build can unseal; a replacement enclave restores from the latest snapshot with no data loss (M2).
+
+* *Supply-chain security.* Reproducible builds from Digital Asset–signed Splice binaries, published PCR values per release, and a guide so any third party can rebuild and verify what is running (M1).
+
+* *Broadly applicable across operators, self-operated and hosted.* One image serves both cases: the same attestation-verified provisioning flow works whether the issuer runs the enclave itself or hands it to an independent infrastructure operator. M5 requires three independent organizations operating it.
+
+* *Complements rather than duplicates existing resilience work.* We add a node class to Canton's existing multi-hosting and co-validation mechanism, with no protocol change, and build to run alongside the Covalidation Service.
+
+The three-key model also contributes to **RFP 26, Key Management and Signing Controls**: it is a reference architecture for key custody in hosted and self-operated environments, with the identity key confined to the enclave, the persistence key released only to an attested build, and the audit key held in self-custody, an HSM, or with an external custodian at the operator's choice.
+
+The work operates within CIP-0100 governance.
 
 **4\. Backward Compatibility**
 
@@ -151,7 +171,7 @@ Operators don’t have direct full access to Ledger API to protect Party’s pri
 | **M2** | Encrypted persistence and provisioning | Week 6 | Snapshot/restore via the sealed persistence key; attestation-verified key injection; audit-key export path with local keygen; restart without data loss |
 | **M3** | Confirming co-validator | Week 9 | Confirmation-level hosting of a multi-hosted party on TestNet, with the enclave node's confirmations counted toward the threshold |
 | **M4** | Hardening and independent review | Week 12 | Threat model; independent security review of the enclave image, key handling, and provisioning flow, with remediations; Splice upgrade runbook demonstrated |
-| **M5** | Adoption | Week 16 | Reference deployment, operator documentation, onboarding support; at least three independent organizations operating co-validators |
+| **M5** | Adoption | Week 16 | Reference deployment, operator documentation, onboarding support; at least three independent organizations operating co-validators. This milestone also carries the twelve-month post-release maintenance and support commitment for all delivered artifacts |
 
 **Acceptance Criteria**
 
@@ -179,9 +199,13 @@ Total: **3,630,000 CC** (reference ≈ USD 450,000 at $0.124 on 2026-08-31; we w
 
 * Milestone 4: 455,000 CC upon committee acceptance
 
-* Milestone 5 (adoption): 1815,000 CC upon committee acceptance
+* Milestone 5 (adoption): 1,815,000 CC upon committee acceptance
 
 Funding covers engineering, infrastructure (enclave-capable instances, multi-environment nodes, storage), an independent third-party security review, documentation, and a twelve-month post-M5 maintenance and support commitment for the released artifacts. Project duration is approximately four months, so milestone amounts are fixed in CC under the fund's terms for projects of six months or less.
+
+**Adoption.** Milestones 1–4 are priced on engineering effort. Milestone 5 is priced on outcome, not on the four weeks between M4 and M5: it pays only once independent organizations are running the co-validator. Half of the request is therefore contingent on adoption by others.
+
+**Maintenance and support.** The Milestone 5 payment also covers the reference deployment, operator onboarding, and twelve months of maintenance and support for the released artifacts after M5.
 
 **Co-Marketing**
 
@@ -189,7 +213,7 @@ We will coordinate announcements with the Foundation at M1 and M5, publish a tec
 
 **Motivation**
 
-Institutional participants face a recurring question: why should a counterparty trust a ledger view maintained by nodes you operate? Multi-hosting answers it, and every current form of it — running more nodes yourself, adding a partner, or engaging a managed service — extends the circle of organizations that can read the party's data and must be vetted. A TEE co-validator adds a confirmation without extending that circle. Beneficiaries: wallets, applications, issuers, and institutions hosting parties on Canton; infrastructure operators who want to offer co-validation without asking customers for trust or visibility; and the network itself, whose trust story strengthens without any protocol change.
+Institutional participants face a recurring question: why should a counterparty trust a ledger view maintained by nodes you operate? Multi-hosting answers it, and every current form of it, running more nodes yourself, adding a partner, or engaging a managed service, extends the circle of organizations that can read the party's data and must be vetted. A TEE co-validator adds a confirmation without extending that circle. Beneficiaries: wallets, applications, issuers, and institutions hosting parties on Canton; infrastructure operators who want to offer co-validation without asking customers for trust or visibility; and the network itself, whose trust story strengthens without any protocol change.
 
 **Rationale**
 
