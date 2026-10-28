@@ -10,7 +10,7 @@ CANTON DEVELOPMENT FUND · PROPOSAL
 | RFP / ROADMAP AREA | RFP 23: Validator and Shared Infrastructure Security and Resilience (Security, Assurance & Incident Readiness). Secondary: RFP 26: Key Management and Signing Controls |
 | LABEL | node-deployment-operations |
 | CHAMPION | Shaul Kfir (Digital Asset) |
-| TOTAL FUNDING REQUEST | 3,630,000 CC |
+| TOTAL FUNDING REQUEST | 4,590,000 CC |
 | PROJECT DURATION | About four months (16 weeks), plus twelve months of maintenance and support |
 
 **Abstract**
@@ -173,6 +173,8 @@ Operators don’t have direct full access to Ledger API to protect Party’s pri
 | **M4** | Hardening and independent review | Week 12 | Threat model; independent security review of the enclave image, key handling, and provisioning flow, with remediations; Splice upgrade runbook demonstrated |
 | **M5** | Adoption | Week 16 | Reference deployment, operator documentation, onboarding support; at least three independent organizations operating co-validators. This milestone also carries the twelve-month post-release maintenance and support commitment for all delivered artifacts |
 
+Committed delivery is three months after the estimated delivery for M1–M4, and twenty-four months after for M5.
+
 **Acceptance Criteria**
 
 Each criterion is verifiable by parties other than us.
@@ -185,21 +187,21 @@ Each criterion is verifiable by parties other than us.
 
 * **M4.** The security review report is published together with remediations; an upgrade across two Splice versions is executed per the runbook.
 
-* **M5.** At least three organizations, independent of one another and including at least one unaffiliated with Financial Privacy Inc., each operate a co-validator for at least 30 days on TestNet or MainNet.
+* **M5.** At least three organizations, independent of one another and of Financial Privacy Inc., each use the TEE co-validator on MainNet for at least 30 days.
 
 **Funding**
 
-Total: **3,630,000 CC** (reference ≈ USD 450,000 at $0.124 on 2026-08-31; we will re-strike CC amounts at the prevailing price on submission).
+Total: **4,590,000 CC** (reference ≈ USD 450,000 at $0.098 on 2026-10-27; we will re-strike CC amounts at the prevailing price on submission).
 
-* Milestone 1: 340,000 CC upon committee acceptance
+* Milestone 1: 430,000 CC upon committee acceptance
 
-* Milestone 2: 455,000 CC upon committee acceptance
+* Milestone 2: 575,000 CC upon committee acceptance
 
-* Milestone 3: 565,000 CC upon committee acceptance
+* Milestone 3: 715,000 CC upon committee acceptance
 
-* Milestone 4: 455,000 CC upon committee acceptance
+* Milestone 4: 575,000 CC upon committee acceptance
 
-* Milestone 5 (adoption): 1,815,000 CC upon committee acceptance
+* Milestone 5 (adoption): 2,295,000 CC upon committee acceptance
 
 Funding covers engineering, infrastructure (enclave-capable instances, multi-environment nodes, storage), an independent third-party security review, documentation, and a twelve-month post-M5 maintenance and support commitment for the released artifacts. Project duration is approximately four months, so milestone amounts are fixed in CC under the fund's terms for projects of six months or less.
 
